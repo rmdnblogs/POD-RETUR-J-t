@@ -1,0 +1,29 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Retur POD Maker v2.4</title>
+<link rel="stylesheet" href="style.css">
+</head>
+<body>
+<h1>Retur POD Maker • v2.4</h1>
+<p>Tambahkan foto satu per satu (maks. 3 foto) dengan drag & drop atau pilih dari penyimpanan</p>
+
+<div id="dropArea">💧 Seret satu foto ke sini<br>atau<br>
+  <button id="fileButton">📂 Pilih Foto dari Penyimpanan</button>
+  <input type="file" id="fileInput" accept="image/*" hidden>
+</div>
+
+<div id="preview"></div>
+
+<canvas id="canvas" width="1080" height="1440"></canvas>
+
+<div class="controls">
+  <button id="downloadButton">💾 Simpan ke Galeri</button>
+  <button id="shareButton">💬 Kirim via WhatsApp</button>
+</div>
+
+<script src="app.js"></script>
+</body>
+</html>

@@ -1,0 +1,39 @@
+body { font-family: Arial, sans-serif; text-align:center; margin: 20px; background:#f8f9fb; }
+h1 { color:#d62828; }
+#dropArea {
+  border: 2px dashed #ccc;
+  border-radius: 10px;
+  padding: 40px;
+  margin: 20px auto;
+  width: 90%;
+  color:#555;
+  font-size: 1.1rem;
+  transition: background 0.3s;
+}
+#dropArea.dragover { background: #e0e0e0; }
+#fileButton {
+  margin-top: 10px;
+  background:#d62828; color:#fff; border:none;
+  padding:8px 14px; border-radius:6px; cursor:pointer;
+}
+#preview {
+  display: flex;
+  justify-content: center;
+  gap: 8px;
+  margin-top: 10px;
+}
+#preview img {
+  width: 100px; height: 100px; object-fit: cover;
+  border: 2px solid #ccc; border-radius: 8px;
+}
+canvas {
+  margin-top: 20px;
+  width: 100%; max-width: 1080px;
+  border: 1px solid #ccc; border-radius: 8px;
+}
+.controls { margin-top: 15px; }
+button {
+  background:#d62828; color:#fff; border:none;
+  padding:10px 16px; border-radius:6px; cursor:pointer;
+}
+button:active { transform: translateY(1px); }
