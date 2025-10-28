@@ -1,29 +1,205 @@
 <!DOCTYPE html>
 <html lang="id">
 <head>
-<meta charset="UTF-8">
-<meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>Retur POD Maker v2.4</title>
-<link rel="stylesheet" href="style.css">
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Retur POD Maker v2.5</title>
+  <style>
+    body {
+      font-family: Arial, sans-serif;
+      background: #f5f5f5;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: flex-start;
+      min-height: 100vh;
+      padding: 20px;
+    }
+    h1 {
+      color: #d32f2f;
+      margin-bottom: 10px;
+    }
+    .drop-zone {
+      border: 2px dashed #aaa;
+      background: white;
+      border-radius: 10px;
+      width: 90%;
+      max-width: 400px;
+      height: 180px;
+      display: flex;
+      flex-direction: column;
+      justify-content: center;
+      align-items: center;
+      color: #888;
+      cursor: pointer;
+      margin-bottom: 15px;
+      text-align: center;
+    }
+    .drop-zone.dragover {
+      background: #e0e0e0;
+      border-color: #d32f2f;
+      color: #000;
+    }
+    .preview {
+      display: flex;
+      flex-direction: row;
+      justify-content: center;
+      flex-wrap: wrap;
+      gap: 5px;
+      margin-top: 10px;
+    }
+    .preview img {
+      width: 100px;
+      height: auto;
+      border: 2px solid #ccc;
+      border-radius: 8px;
+      cursor: pointer;
+    }
+    button {
+      margin: 5px;
+      padding: 10px 15px;
+      border: none;
+      border-radius: 6px;
+      background: #d32f2f;
+      color: white;
+      font-weight: bold;
+      cursor: pointer;
+    }
+    button:hover {
+      background: #b71c1c;
+    }
+    canvas {
+      display: none;
+    }
+  </style>
 </head>
 <body>
-<h1>Retur POD Maker • v2.4</h1>
-<p>Tambahkan foto satu per satu (maks. 3 foto) dengan drag & drop atau pilih dari penyimpanan</p>
+  <h1>📦 Retur POD Maker</h1>
+  <div class="drop-zone" id="dropZone">
+    Tarik & letakkan foto di sini<br>atau<br><strong>Klik untuk memilih dari penyimpanan</strong>
+  </div>
+  <input type="file" id="fileInput" accept="image/*" hidden multiple />
+  <div class="preview" id="preview"></div>
 
-<div id="dropArea">💧 Seret satu foto ke sini<br>atau<br>
-  <button id="fileButton">📂 Pilih Foto dari Penyimpanan</button>
-  <input type="file" id="fileInput" accept="image/*" hidden>
-</div>
+  <div>
+    <button id="saveBtn">💾 Simpan</button>
+    <button id="shareBtn">💬 Kirim via WhatsApp</button>
+  </div>
 
-<div id="preview"></div>
+  <canvas id="canvas"></canvas>
 
-<canvas id="canvas" width="1080" height="1440"></canvas>
+  <script>
+    const dropZone = document.getElementById('dropZone');
+    const fileInput = document.getElementById('fileInput');
+    const preview = document.getElementById('preview');
+    const canvas = document.getElementById('canvas');
+    let images = [];
 
-<div class="controls">
-  <button id="downloadButton">💾 Simpan ke Galeri</button>
-  <button id="shareButton">💬 Kirim via WhatsApp</button>
-</div>
+    // --- Drag & Drop ---
+    dropZone.addEventListener('click', () => fileInput.click());
+    dropZone.addEventListener('dragover', (e) => {
+      e.preventDefault();
+      dropZone.classList.add('dragover');
+    });
+    dropZone.addEventListener('dragleave', () => dropZone.classList.remove('dragover'));
+    dropZone.addEventListener('drop', (e) => {
+      e.preventDefault();
+      dropZone.classList.remove('dragover');
+      handleFiles(e.dataTransfer.files);
+    });
+    fileInput.addEventListener('change', () => handleFiles(fileInput.files));
 
-<script src="app.js"></script>
+    function handleFiles(files) {
+      for (const file of files) {
+        if (!file.type.startsWith('image/')) continue;
+        const reader = new FileReader();
+        reader.onload = (e) => {
+          if (images.length < 3) {
+            images.push(e.target.result);
+            updatePreview();
+          } else {
+            alert('Maksimal 3 foto saja');
+          }
+        };
+        reader.readAsDataURL(file);
+      }
+    }
+
+    function updatePreview() {
+      preview.innerHTML = '';
+      images.forEach((src, index) => {
+        const img = document.createElement('img');
+        img.src = src;
+        img.title = 'Klik untuk hapus/ganti foto';
+        img.onclick = () => {
+          if (confirm('Hapus foto ini?')) {
+            images.splice(index, 1);
+            updatePreview();
+          }
+        };
+        preview.appendChild(img);
+      });
+    }
+
+    function createCollage() {
+      if (images.length === 0) {
+        alert('Tambahkan minimal 1 foto');
+        return null;
+      }
+      const imgEls = images.map(src => {
+        const img = new Image();
+        img.src = src;
+        return img;
+      });
+
+      return new Promise((resolve) => {
+        Promise.all(imgEls.map(img => new Promise(r => img.onload = r))).then(() => {
+          const heights = imgEls.map(i => i.height);
+          const maxHeight = Math.max(...heights);
+          const separator = 8;
+          const totalWidth = imgEls.reduce((a, b) => a + b.width, 0) + (imgEls.length - 1) * separator;
+          canvas.width = totalWidth;
+          canvas.height = maxHeight;
+          const ctx = canvas.getContext('2d');
+          ctx.fillStyle = '#ccc';
+          ctx.fillRect(0, 0, totalWidth, maxHeight);
+
+          let x = 0;
+          imgEls.forEach((img, i) => {
+            ctx.drawImage(img, x, 0);
+            x += img.width + separator;
+          });
+
+          resolve(canvas.toDataURL('image/png'));
+        });
+      });
+    }
+
+    document.getElementById('saveBtn').addEventListener('click', async () => {
+      const collage = await createCollage();
+      if (!collage) return;
+      const fileName = prompt('Masukkan nama file (tanpa .png):', 'retur_pod');
+      const link = document.createElement('a');
+      link.download = (fileName ? fileName : 'retur_pod') + '.png';
+      link.href = collage;
+      link.click();
+    });
+
+    document.getElementById('shareBtn').addEventListener('click', async () => {
+      const collage = await createCollage();
+      if (!collage) return;
+      const blob = await (await fetch(collage)).blob();
+      const file = new File([blob], 'retur_pod.png', { type: 'image/png' });
+      if (navigator.canShare && navigator.canShare({ files: [file] })) {
+        await navigator.share({
+          files: [file],
+          title: 'Retur POD',
+          text: 'Bukti retur paket'
+        });
+      } else {
+        alert('Fitur berbagi tidak didukung di perangkat ini.');
+      }
+    });
+  </script>
 </body>
 </html>
